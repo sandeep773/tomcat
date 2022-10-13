@@ -1,0 +1,83 @@
+---
+- name: Hardening Tomcat server
+  remote_user: kwikonnect
+  # roles:
+  #   - role: 'tomcat-hardening'
+  gather_facts: true
+  become: true
+  # serial: 2
+  hosts: '{{target}}'
+  vars:
+    tomcat_conf: '/opt/tomcat8/conf/web.xml'
+    tom_conf: '/opt/tomcat8/conf/server.xml'
+    # server: '{{ target }}'
+    initd_path: "/opt/tomcat8/bin"
+    address: 'cat server.xml | grep address'
+    target: "{{target}}"
+   
+
+  tasks:
+    # - name: checking the conf file
+    #   file:
+    #     path: '/var/install/mobikwik/config'
+    #     mode: '0755' 
+    #     owner: tomcat  
+    #     group: tomcat 
+
+
+
+    - name: Adding Enforce HTTPS check
+      template: 
+        src: web1.xml
+        dest: /opt/tomcat8/conf/web.xml
+        mode: '0755'
+        owner: tomcat  
+        group: tomcat
+
+      # lineinfile:
+      #   path: "{{ tomcat_conf }}"
+      #   regexp: "<security-constraint>\n<web-resource-collection>"
+      #   state: absent
+      #   insertbefore: '</web-app>'
+      #   line: |-
+      #       <security-constraint>\n<web-resource-collection>
+      #       <web-resource-name>Protected Context</web-resource-name>
+      #       <url-pattern>/*</url-pattern>\n
+      #       </web-resource-collection>\n<user-data-constraint>
+      #       <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+      #       </user-data-constraint>\n</security-constraint>
+      #   backup: yes
+
+
+    # - name: Add Secure & HttpOnly flag to Cookie
+    #   template: 
+    #     src: server.xml
+    #     dest: '{{tom_conf}}'
+      # lineinfile:
+      #   path: "{{ tomcat_conf }}"
+      #   regexp: "<cookie-config>"
+      #   state: absent
+      #   insertbefore: '</session-config>'
+      #   line: |-
+      #              <cookie-config>
+      #                  <http-only>true</http-only>
+      #                  <secure>true</secure>
+      #              </cookie-config>
+      #   backup: yes
+
+
+    
+    - name: IP address update in server.xml
+      template: 
+        src: server1.xml
+        dest: /opt/tomcat8/conf/server.xml
+        mode: '0755' 
+        owner: tomcat  
+        group: tomcat
+
+
+    
+    - name: Start Tomcat8
+      command: "{{ initd_path }}/./startup.sh -security"
+      become: true
+
